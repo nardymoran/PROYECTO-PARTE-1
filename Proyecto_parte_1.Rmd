@@ -1,0 +1,89 @@
+---
+title: "Proyecto_Parte_1"
+output: html_notebook
+---
+```{r}
+# Instalación de paquetes necesarios (si no están instalados)
+if(!require(arules)) install.packages("arules", dependencies=TRUE)
+if(!require(arulesSequences)) install.packages("arulesSequences", dependencies=TRUE)
+if(!require(cluster)) install.packages("cluster", dependencies=TRUE)
+if(!require(dplyr)) install.packages("dplyr", dependencies=TRUE)
+
+# Carga de librerías
+library(arules)
+library(arulesSequences)
+library(cluster)
+library(dplyr)
+
+# Función para cargar y limpiar el dataset
+load_and_clean_data <- function(filename) {
+  data <- read.csv(filename, header = TRUE)
+  data <- na.omit(data)  # Eliminar filas con valores NA
+  return(data)
+}
+
+# Carga y limpieza de los datasets
+data_2019 <- load_and_clean_data("Downloads/2019-Grad-Internet.csv")
+data_2022 <- load_and_clean_data("Downloads/2022-Grad-Internet.csv")
+data_2023 <- load_and_clean_data("Downloads/2023-Grad-Internet.csv")
+
+# Algoritmo Apriori para cada dataset
+run_apriori <- function(data) {
+  rules <- apriori(data, parameter = list(supp = 0.01, conf = 0.8, minlen = 2))
+  rules <- sort(rules, by = "lift", decreasing = TRUE)
+  inspect(head(rules, 4))  # Mostrar las 4 reglas más interesantes
+  return(rules)
+}
+
+# Algoritmo FP-Growth para cada dataset
+run_fp_growth <- function(data) {
+  # Asumiendo que los datos están en transacciones
+  transactions <- as(data, "transactions")
+  rules_fp <- cspade(transactions, parameter = list(supp = 0.01))
+  inspect(head(rules_fp, 4))  # Mostrar las 4 reglas más interesantes
+  return(rules_fp)
+}
+
+# K-Means Clustering
+run_kmeans <- function(data, centers = 3) {
+  # Normalizar los datos si es necesario
+  data_scaled <- scale(data)
+  kmeans_result <- kmeans(data_scaled, centers = centers)
+  
+  # Graficar los clústeres (asumiendo 2D para simplicidad de visualización)
+  plot(data_scaled, col = kmeans_result$cluster, pch = 19, 
+       main = paste("K-Means Clustering con", centers, "centros"))
+  
+  return(kmeans_result)
+}
+
+# Ejecutar Apriori en cada dataset
+cat("Resultados Apriori para 2019\n")
+rules_2019 <- run_apriori(data_2019)
+
+cat("Resultados Apriori para 2022\n")
+rules_2022 <- run_apriori(data_2022)
+
+cat("Resultados Apriori para 2023\n")
+rules_2023 <- run_apriori(data_2023)
+
+# Ejecutar FP-Growth en cada dataset
+cat("Resultados FP-Growth para 2019\n")
+fp_2019 <- run_fp_growth(data_2019)
+
+cat("Resultados FP-Growth para 2022\n")
+fp_2022 <- run_fp_growth(data_2022)
+
+cat("Resultados FP-Growth para 2023\n")
+fp_2023 <- run_fp_growth(data_2023)
+
+# Ejecutar K-Means en cada dataset
+cat("Resultados K-Means para 2019\n")
+kmeans_2019 <- run_kmeans(data_2019, centers = 3)
+
+cat("Resultados K-Means para 2022\n")
+kmeans_2022 <- run_kmeans(data_2022, centers = 3)
+
+cat("Resultados K-Means para 2023\n")
+kmeans_2023 <- run_kmeans(data_2023, centers = 3)
+```
